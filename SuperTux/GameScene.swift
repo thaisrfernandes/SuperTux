@@ -18,11 +18,21 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     private var movingDirection: Directions = Directions.right
     
+    private var xMoveValue: CGFloat {
+        if movingDirection == .left {
+            return -800
+        }
+        
+        return 800
+    }
+    
     private var actualState: TuxStates = .standing {
         didSet {
             createTux(state: actualState)
         }
     }
+    
+    private var stepsX: CGFloat = 0.0
     
     private var isWalking = false {
         didSet {
@@ -34,46 +44,22 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         }
     }
     
-    enum Directions: CaseIterable {
-        case left
-        case right
-        
-        var description: String {
-            switch self {
-                case .left: return "Right"
-                case .right: return "Right"
-            }
-        }
-    }
-    
-    enum TuxStates {
-        case standing
-        case walking
-        case jumping
-        
-        var assetName: String {
-            switch self {
-                case .standing: return "TuxStanding"
-                case .walking: return "TuxWalking"
-                case .jumping: return "TuxJumping"
-            }
-        }
-    }
-    
     override func didMove(to view: SKView) {
         self.anchorPoint = CGPoint(x: 0.5, y: 0.5)
         
         createBackground()
         setUpTux()
         setGroundPhysics()
-        
+        setGestures()
+        self.physicsWorld.contactDelegate = self
+    }
+    
+    func setGestures() {
         let tapGesture = UITapGestureRecognizer(target: self, action: #selector(onTap))
         self.view?.addGestureRecognizer(tapGesture)
         
         let longTapGesture = UILongPressGestureRecognizer(target: self, action: #selector(onLongTap))
         self.view?.addGestureRecognizer(longTapGesture)
-        
-        self.physicsWorld.contactDelegate = self
     }
     
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
@@ -88,19 +74,18 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         }
     }
     
-    
     @objc func onLongTap(sender: UILongPressGestureRecognizer) {
-        
         if !isWalking {
             actualState = .walking
         }
         
         if sender.state == .began {
-            let x = movingDirection == Directions.right ? 800 : -800
-            let movePlayerAction = SKAction.moveTo(x: CGFloat(x), duration: 8)
-            self.tux.run(movePlayerAction)
-        }
-        if sender.state == .ended {
+            let moveAction = SKAction.moveTo(x: xMoveValue, duration: 8)
+            self.tux.run(moveAction)
+            
+            moveBackground(to: xMoveValue)
+            
+        } else if sender.state == .ended {
             self.isWalking = false
         }
     }
@@ -140,7 +125,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     }
     
     func setUpTux() {
-        self.tux = SKSpriteNode(imageNamed: "TuxStanding")
+        self.tux = SKSpriteNode(imageNamed: "\(TuxStates.standing.assetName)\(movingDirection.description)")
         self.tux.position = CGPoint(x: -(self.scene?.size.width)!/2.5, y: 0)
         self.tux.zPosition = 1
         self.tux.name = "tux"
@@ -154,7 +139,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
         switch state {
             case .standing, .jumping:
-                newTux = SKSpriteNode(imageNamed: state.assetName)
+                newTux = SKSpriteNode(imageNamed: "\(state.assetName)\(movingDirection.description)")
             case .walking:
                 newTux = SKSpriteNode(texture: getAnimation(from: "\(state.assetName)\(movingDirection.description)"))
         }
@@ -207,9 +192,10 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                 withKey:"walkingTux")
     }
     
-    func moveBackground() {
+    func moveBackground(to position: CGFloat) {
         self.enumerateChildNodes(withName: "Background") { node, error in
-            node.position.x -= 2
+            
+            node.position.x -= position
             
             if node.position.x < (-(self.scene?.size.width)!) {
                 node.position.x += ((self.scene?.size.width)! * 3)

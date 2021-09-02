@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		89192BE226E1383E002B39ED /* TuxWalkingLeft.atlas in Resources */ = {isa = PBXBuildFile; fileRef = 89192BE126E1383E002B39ED /* TuxWalkingLeft.atlas */; };
+		89192BE726E13B8C002B39ED /* Enums.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89192BE626E13B8C002B39ED /* Enums.swift */; };
 		89663FB326DFE2F6007D50F9 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89663FB226DFE2F6007D50F9 /* AppDelegate.swift */; };
 		89663FB926DFE2F7007D50F9 /* GameScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89663FB826DFE2F7007D50F9 /* GameScene.swift */; };
 		89663FBB26DFE2F7007D50F9 /* GameViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89663FBA26DFE2F7007D50F9 /* GameViewController.swift */; };
@@ -16,6 +18,8 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		89192BE126E1383E002B39ED /* TuxWalkingLeft.atlas */ = {isa = PBXFileReference; lastKnownFileType = folder.skatlas; path = TuxWalkingLeft.atlas; sourceTree = "<group>"; };
+		89192BE626E13B8C002B39ED /* Enums.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Enums.swift; sourceTree = "<group>"; };
 		89663FAF26DFE2F6007D50F9 /* SuperTux.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SuperTux.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		89663FB226DFE2F6007D50F9 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		89663FB826DFE2F7007D50F9 /* GameScene.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameScene.swift; sourceTree = "<group>"; };
@@ -37,6 +41,23 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		89192BE326E13B51002B39ED /* Atlas */ = {
+			isa = PBXGroup;
+			children = (
+				89192BE126E1383E002B39ED /* TuxWalkingLeft.atlas */,
+				89EFB9D526E01D59001D85C0 /* TuxWalkingRight.atlas */,
+			);
+			path = Atlas;
+			sourceTree = "<group>";
+		};
+		89192BE426E13B6E002B39ED /* Model */ = {
+			isa = PBXGroup;
+			children = (
+				89192BE626E13B8C002B39ED /* Enums.swift */,
+			);
+			path = Model;
+			sourceTree = "<group>";
+		};
 		89663FA626DFE2F6007D50F9 = {
 			isa = PBXGroup;
 			children = (
@@ -56,7 +77,8 @@
 		89663FB126DFE2F6007D50F9 /* SuperTux */ = {
 			isa = PBXGroup;
 			children = (
-				89EFB9D526E01D59001D85C0 /* TuxWalkingRight.atlas */,
+				89192BE426E13B6E002B39ED /* Model */,
+				89192BE326E13B51002B39ED /* Atlas */,
 				89663FB226DFE2F6007D50F9 /* AppDelegate.swift */,
 				89663FB826DFE2F7007D50F9 /* GameScene.swift */,
 				89663FBA26DFE2F7007D50F9 /* GameViewController.swift */,
@@ -124,6 +146,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				89192BE226E1383E002B39ED /* TuxWalkingLeft.atlas in Resources */,
 				89EFB9D626E01D59001D85C0 /* TuxWalkingRight.atlas in Resources */,
 				89663FBE26DFE2F7007D50F9 /* Main.storyboard in Resources */,
 				89663FC026DFE2F8007D50F9 /* Assets.xcassets in Resources */,
@@ -139,6 +162,7 @@
 			files = (
 				89663FB926DFE2F7007D50F9 /* GameScene.swift in Sources */,
 				89663FBB26DFE2F7007D50F9 /* GameViewController.swift in Sources */,
+				89192BE726E13B8C002B39ED /* Enums.swift in Sources */,
 				89663FB326DFE2F6007D50F9 /* AppDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
