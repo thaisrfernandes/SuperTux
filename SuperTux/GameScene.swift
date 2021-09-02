@@ -8,36 +8,120 @@
 import SpriteKit
 import GameplayKit
 
-class GameScene: SKScene {
+class GameScene: SKScene, SKPhysicsContactDelegate {
     
     private var background: SKSpriteNode = SKSpriteNode()
     private var tux: SKSpriteNode = SKSpriteNode()
     private var floor: SKSpriteNode = SKSpriteNode()
     
-    private var hasBegun = false
+    private var tuxWalkingFrames: [SKTexture] = []
+    
+    private var movingDirection: Directions = Directions.right
+    
+    private var actualState: TuxStates = .standing {
+        didSet {
+            createTux(state: actualState)
+        }
+    }
+    
+    private var isWalking = false {
+        didSet {
+            if isWalking {
+                actualState = .walking
+            } else {
+                actualState = .standing
+            }
+        }
+    }
+    
+    enum Directions: CaseIterable {
+        case left
+        case right
+        
+        var description: String {
+            switch self {
+                case .left: return "Right"
+                case .right: return "Right"
+            }
+        }
+    }
+    
+    enum TuxStates {
+        case standing
+        case walking
+        case jumping
+        
+        var assetName: String {
+            switch self {
+                case .standing: return "TuxStanding"
+                case .walking: return "TuxWalking"
+                case .jumping: return "TuxJumping"
+            }
+        }
+    }
     
     override func didMove(to view: SKView) {
         self.anchorPoint = CGPoint(x: 0.5, y: 0.5)
         
         createBackground()
-        createTux()
-        setPhysics()
+        setUpTux()
+        setGroundPhysics()
         
         let tapGesture = UITapGestureRecognizer(target: self, action: #selector(onTap))
         self.view?.addGestureRecognizer(tapGesture)
         
-    }
+        let longTapGesture = UILongPressGestureRecognizer(target: self, action: #selector(onLongTap))
+        self.view?.addGestureRecognizer(longTapGesture)
         
+        self.physicsWorld.contactDelegate = self
+    }
+    
+    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+        if let touch = touches.first {
+            let position = touch.location(in: view)
+
+            if position.x > 450 {
+                self.movingDirection = .right
+            } else if position.x < 450 {
+                self.movingDirection = .left
+            }
+        }
+    }
+    
+    
+    @objc func onLongTap(sender: UILongPressGestureRecognizer) {
+        
+        if !isWalking {
+            actualState = .walking
+        }
+        
+        if sender.state == .began {
+            let x = movingDirection == Directions.right ? 800 : -800
+            let movePlayerAction = SKAction.moveTo(x: CGFloat(x), duration: 8)
+            self.tux.run(movePlayerAction)
+        }
+        if sender.state == .ended {
+            self.isWalking = false
+        }
+    }
+    
+    func didBegin(_ contact: SKPhysicsContact) {
+        if isWalking && actualState != .walking {
+            self.actualState = .walking
+        } else if !isWalking && actualState == .jumping {
+            self.actualState = .standing
+        }
+    }
+    
     @objc func onTap() {
-        if hasBegun {
+        if actualState != .jumping {
             jump()
-        } else if !hasBegun {
-            self.hasBegun = true
         }
     }
     
     func jump() {
-        tux.physicsBody?.applyImpulse(CGVector(dx: 0.0, dy: 40.0))
+        self.actualState = .jumping
+        tux.physicsBody?.applyImpulse(CGVector(dx: 0.0, dy: 60.0))
     }
     
     func createBackground() {
@@ -55,15 +139,72 @@ class GameScene: SKScene {
         }
     }
     
-    func createTux() {
-        tux = SKSpriteNode(imageNamed: "standing_tux")
-        
-        let tuxPosition = CGPoint(x: -(self.scene?.size.width)!/2.5, y: 0)
-        
-        tux.position = tuxPosition
-        tux.zPosition = 1
+    func setUpTux() {
+        self.tux = SKSpriteNode(imageNamed: "TuxStanding")
+        self.tux.position = CGPoint(x: -(self.scene?.size.width)!/2.5, y: 0)
+        self.tux.zPosition = 1
+        self.tux.name = "tux"
         
         addChild(tux)
+        setTuxPhysics()
+    }
+    
+    func createTux(state: TuxStates) {
+        var newTux = SKSpriteNode()
+        
+        switch state {
+            case .standing, .jumping:
+                newTux = SKSpriteNode(imageNamed: state.assetName)
+            case .walking:
+                newTux = SKSpriteNode(texture: getAnimation(from: "\(state.assetName)\(movingDirection.description)"))
+        }
+        
+        var lastPosition: CGPoint = CGPoint(x: -(self.scene?.size.width)!/2.5, y: 0)
+        
+        if let lastChildren = children.first(where: { $0.name == "tux" }) {
+            removeChildren(in: [lastChildren])
+            
+            lastPosition = lastChildren.position
+        }
+        
+        self.tux = newTux
+        self.tux.zPosition = 1
+        self.tux.name = "tux"
+        self.tux.position = lastPosition
+        
+        addChild(tux)
+        
+        if state == TuxStates.walking {
+            animateTux()
+        }
+        
+        setTuxPhysics()
+    }
+    
+    func getAnimation(from atlas: String) -> SKTexture {
+        let tuxAnimatedAtlas = SKTextureAtlas(named: atlas)
+        
+        var walkFrames: [SKTexture] = []
+        
+        let numImages = tuxAnimatedAtlas.textureNames.count
+        
+        for i in 1...numImages {
+            let tuxTextureName = "tux\(i)"
+            walkFrames.append(tuxAnimatedAtlas.textureNamed(tuxTextureName))
+        }
+        
+        tuxWalkingFrames = walkFrames
+        
+        return tuxWalkingFrames[0]
+    }
+    
+    func animateTux() {
+        tux.run(SKAction.repeatForever(
+                    SKAction.animate(with: tuxWalkingFrames,
+                                     timePerFrame: 0.1,
+                                     resize: false,
+                                     restore: true)),
+                withKey:"walkingTux")
     }
     
     func moveBackground() {
@@ -76,11 +217,23 @@ class GameScene: SKScene {
         }
     }
     
-    func setPhysics() {
+    func setTuxPhysics() {
         let tuxPhysicsBody = SKPhysicsBody(rectangleOf: tux.frame.size)
         tuxPhysicsBody.isDynamic = true
         tuxPhysicsBody.affectedByGravity = true
-        tux.physicsBody = tuxPhysicsBody
+        
+        tuxPhysicsBody.categoryBitMask = 00000001
+        tuxPhysicsBody.collisionBitMask = 00000011
+        tuxPhysicsBody.contactTestBitMask = 00000011
+        
+        let activeTux = children.first(where: { $0.name == "tux" })
+        
+        if let activeTux = activeTux {
+            activeTux.physicsBody = tuxPhysicsBody
+        }
+    }
+    
+    func setGroundPhysics() {
         
         floor = SKSpriteNode(color: .clear, size: CGSize(width: (self.scene?.size.width)!, height: ((self.scene?.size.height)!) * 0.84))
         floor.position = CGPoint(x: 0, y: -((self.scene?.size.height)! / 2))
@@ -88,14 +241,17 @@ class GameScene: SKScene {
         
         let floorPhysicsBody = SKPhysicsBody(rectangleOf: floor.frame.size)
         floorPhysicsBody.isDynamic = false
+        
+        floorPhysicsBody.categoryBitMask = 00000010
+        floorPhysicsBody.collisionBitMask = 00000011
+        floorPhysicsBody.contactTestBitMask = 00000011
+        
         floor.physicsBody = floorPhysicsBody
         
         addChild(floor)
     }
     
     override func update(_ currentTime: TimeInterval) {
-        if hasBegun {
-            moveBackground()
-        }
+        
     }
 }
